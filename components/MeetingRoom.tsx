@@ -47,15 +47,15 @@ const MeetingRoom = () => {
   const [showParticipants, setShowParticipants] =
     useState(false);
 
-  // Stores complete meeting transcript
+  // Stores the meeting transcript
   const [transcript, setTranscript] =
     useState('');
 
-  // Controls AI Summary window
+  // Controls the AI Summary window
   const [showSummary, setShowSummary] =
     useState(false);
 
-  // Get current Stream call
+  // Get the current Stream call
   const call = useCall();
 
   const { useCallCallingState } =
@@ -66,56 +66,48 @@ const MeetingRoom = () => {
 
   /*
    * ==========================================
-   * GET LIVE CLOSED CAPTIONS FROM STREAM
+   * STREAM CLOSED CAPTIONS
    * ==========================================
    */
 
   useEffect(() => {
     if (!call) return;
 
-    /*
-     * Your installed Stream SDK version has
-     * a TypeScript event-type mismatch for
-     * call.closed_caption.
-     *
-     * Therefore we use any here.
-     */
+    // Your installed Stream SDK can have
+    // a TypeScript event-type mismatch.
     const streamCall = call as any;
 
-    const unsubscribe =
-      streamCall.on(
-        'call.closed_caption',
-        (event: any) => {
-          const caption =
-            event?.closed_caption;
+    const unsubscribe = streamCall.on(
+      'call.closed_caption',
+      (event: any) => {
+        const caption =
+          event?.closed_caption;
 
-          // Ignore empty captions
-          if (!caption?.text) return;
+        if (!caption?.text) return;
 
-          const speaker =
-            caption?.user?.name ||
-            caption?.user?.id ||
-            'Participant';
+        const speaker =
+          caption?.user?.name ||
+          caption?.user?.id ||
+          'Participant';
 
-          const newLine =
-            `${speaker}: ${caption.text}`;
+        const newLine =
+          `${speaker}: ${caption.text}`;
 
-          setTranscript((previous) => {
-            // Prevent duplicate captions
-            if (previous.includes(newLine)) {
-              return previous;
-            }
+        setTranscript((previous) => {
+          // Prevent duplicate captions
+          if (previous.includes(newLine)) {
+            return previous;
+          }
 
-            if (!previous) {
-              return newLine;
-            }
+          if (!previous) {
+            return newLine;
+          }
 
-            return `${previous}\n${newLine}`;
-          });
-        }
-      );
+          return `${previous}\n${newLine}`;
+        });
+      }
+    );
 
-    // Remove listener when component is destroyed
     return () => {
       if (typeof unsubscribe === 'function') {
         unsubscribe();
@@ -128,11 +120,8 @@ const MeetingRoom = () => {
    * TEST TRANSCRIPT
    * ==========================================
    *
-   * This button is only for testing.
-   *
-   * It allows you to test the AI Summary feature
-   * even when Stream closed captions are not
-   * working yet.
+   * This is only for testing the AI Summary
+   * feature before real Stream captions work.
    */
 
   const addTestTranscript = () => {
@@ -147,7 +136,7 @@ Participant 2: Everyone should complete their assigned tasks before the next mee
 
     setTranscript(testConversation.trim());
 
-    // Automatically open the summary panel
+    // Open AI Summary automatically
     setShowSummary(true);
   };
 
@@ -163,7 +152,7 @@ Participant 2: Everyone should complete their assigned tasks before the next mee
 
   /*
    * ==========================================
-   * WAIT UNTIL USER JOINS THE MEETING
+   * WAIT UNTIL USER JOINS
    * ==========================================
    */
 
@@ -173,7 +162,7 @@ Participant 2: Everyone should complete their assigned tasks before the next mee
 
   /*
    * ==========================================
-   * CHANGE VIDEO LAYOUT
+   * VIDEO LAYOUT
    * ==========================================
    */
 
@@ -267,6 +256,8 @@ Participant 2: Everyone should complete their assigned tasks before the next mee
           items-center
           justify-center
           gap-5
+          flex-wrap
+          pb-2
         "
       >
         {/* Microphone / Camera / Leave */}
@@ -333,7 +324,7 @@ Participant 2: Everyone should complete their assigned tasks before the next mee
 
         <CallStatsButton />
 
-        {/* ================= TEST TRANSCRIPT BUTTON ================= */}
+        {/* ================= TEST TRANSCRIPT ================= */}
 
         <button
           type="button"
@@ -351,7 +342,7 @@ Participant 2: Everyone should complete their assigned tasks before the next mee
           Test Transcript
         </button>
 
-        {/* ================= CLEAR TRANSCRIPT BUTTON ================= */}
+        {/* ================= CLEAR TEST ================= */}
 
         {transcript && (
           <button

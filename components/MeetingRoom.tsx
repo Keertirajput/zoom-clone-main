@@ -28,11 +28,16 @@ import EndCallButton from './EndCallButton';
 import MeetingSummary from './MeetingSummary';
 import { cn } from '@/lib/utils';
 
-type CallLayoutType = 'grid' | 'speaker-left' | 'speaker-right';
+type CallLayoutType =
+  | 'grid'
+  | 'speaker-left'
+  | 'speaker-right';
 
 const MeetingRoom = () => {
   const searchParams = useSearchParams();
-  const isPersonalRoom = !!searchParams.get('personal');
+
+  const isPersonalRoom =
+    !!searchParams.get('personal');
 
   const router = useRouter();
 
@@ -43,7 +48,8 @@ const MeetingRoom = () => {
     useState(false);
 
   // Stores complete meeting transcript
-  const [transcript, setTranscript] = useState('');
+  const [transcript, setTranscript] =
+    useState('');
 
   // Controls AI Summary window
   const [showSummary, setShowSummary] =
@@ -55,7 +61,8 @@ const MeetingRoom = () => {
   const { useCallCallingState } =
     useCallStateHooks();
 
-  const callingState = useCallCallingState();
+  const callingState =
+    useCallCallingState();
 
   /*
    * ==========================================
@@ -66,41 +73,47 @@ const MeetingRoom = () => {
   useEffect(() => {
     if (!call) return;
 
-    // We use "any" here because your installed
-    // Stream SDK version has a TypeScript
-    // event-type mismatch for call.closed_caption.
+    /*
+     * Your installed Stream SDK version has
+     * a TypeScript event-type mismatch for
+     * call.closed_caption.
+     *
+     * Therefore we use any here.
+     */
     const streamCall = call as any;
 
-    const unsubscribe = streamCall.on(
-      'call.closed_caption',
-      (event: any) => {
-        const caption = event?.closed_caption;
+    const unsubscribe =
+      streamCall.on(
+        'call.closed_caption',
+        (event: any) => {
+          const caption =
+            event?.closed_caption;
 
-        // If there is no caption text, ignore it
-        if (!caption?.text) return;
+          // Ignore empty captions
+          if (!caption?.text) return;
 
-        const speaker =
-          caption?.user?.name ||
-          caption?.user?.id ||
-          'Participant';
+          const speaker =
+            caption?.user?.name ||
+            caption?.user?.id ||
+            'Participant';
 
-        const newLine =
-          `${speaker}: ${caption.text}`;
+          const newLine =
+            `${speaker}: ${caption.text}`;
 
-        setTranscript((previous) => {
-          // Prevent duplicate captions
-          if (previous.includes(newLine)) {
-            return previous;
-          }
+          setTranscript((previous) => {
+            // Prevent duplicate captions
+            if (previous.includes(newLine)) {
+              return previous;
+            }
 
-          if (!previous) {
-            return newLine;
-          }
+            if (!previous) {
+              return newLine;
+            }
 
-          return `${previous}\n${newLine}`;
-        });
-      }
-    );
+            return `${previous}\n${newLine}`;
+          });
+        }
+      );
 
     // Remove listener when component is destroyed
     return () => {
@@ -109,6 +122,44 @@ const MeetingRoom = () => {
       }
     };
   }, [call]);
+
+  /*
+   * ==========================================
+   * TEST TRANSCRIPT
+   * ==========================================
+   *
+   * This button is only for testing.
+   *
+   * It allows you to test the AI Summary feature
+   * even when Stream closed captions are not
+   * working yet.
+   */
+
+  const addTestTranscript = () => {
+    const testConversation = `
+Participant 1: Today we discussed our upcoming project.
+Participant 2: The project will focus on developing an AI based meeting assistant.
+Participant 1: We decided to complete the frontend first and then connect the backend API.
+Participant 2: We also need to test the meeting recording and transcript features.
+Participant 1: The team will meet again next Monday to review the progress.
+Participant 2: Everyone should complete their assigned tasks before the next meeting.
+`;
+
+    setTranscript(testConversation.trim());
+
+    // Automatically open the summary panel
+    setShowSummary(true);
+  };
+
+  /*
+   * ==========================================
+   * CLEAR TEST TRANSCRIPT
+   * ==========================================
+   */
+
+  const clearTranscript = () => {
+    setTranscript('');
+  };
 
   /*
    * ==========================================
@@ -192,7 +243,8 @@ const MeetingRoom = () => {
           className={cn(
             'h-[calc(100vh-86px)] hidden ml-2',
             {
-              'show-block': showParticipants,
+              'show-block':
+                showParticipants,
             }
           )}
         >
@@ -218,8 +270,11 @@ const MeetingRoom = () => {
         "
       >
         {/* Microphone / Camera / Leave */}
+
         <CallControls
-          onLeave={() => router.push('/home')}
+          onLeave={() =>
+            router.push('/home')
+          }
         />
 
         {/* ================= LAYOUT BUTTON ================= */}
@@ -278,6 +333,44 @@ const MeetingRoom = () => {
 
         <CallStatsButton />
 
+        {/* ================= TEST TRANSCRIPT BUTTON ================= */}
+
+        <button
+          type="button"
+          onClick={addTestTranscript}
+          className="
+            cursor-pointer
+            rounded-2xl
+            bg-green-600
+            px-4
+            py-2
+            text-white
+            hover:bg-green-700
+          "
+        >
+          Test Transcript
+        </button>
+
+        {/* ================= CLEAR TRANSCRIPT BUTTON ================= */}
+
+        {transcript && (
+          <button
+            type="button"
+            onClick={clearTranscript}
+            className="
+              cursor-pointer
+              rounded-2xl
+              bg-red-600
+              px-4
+              py-2
+              text-white
+              hover:bg-red-700
+            "
+          >
+            Clear Test
+          </button>
+        )}
+
         {/* ================= AI SUMMARY ================= */}
 
         <button
@@ -329,7 +422,9 @@ const MeetingRoom = () => {
 
         {/* ================= END CALL ================= */}
 
-        {!isPersonalRoom && <EndCallButton />}
+        {!isPersonalRoom && (
+          <EndCallButton />
+        )}
       </div>
 
       {/* ================= AI SUMMARY WINDOW ================= */}
